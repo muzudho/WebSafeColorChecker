@@ -14,7 +14,8 @@ namespace WebSafeColorCheck
             InitializeComponent();
         }
 
-        const string SUFFIX = "_result.bmp";
+        const string RESULT_YES_NO_SUFFIX = "_YesNo_result.bmp";
+        const string RESULT_TRANSPARENT_SUFFIX = "_Transparent_result.bmp";
         const string RESULT_HTML = "result.html";
 
         string[] filePaths;
@@ -34,7 +35,10 @@ namespace WebSafeColorCheck
             bitmaps = new List<Bitmap>();
             foreach (string path in filePaths)
             {
-                if (path.EndsWith(SUFFIX))
+                if (
+                    path.EndsWith(RESULT_YES_NO_SUFFIX) ||
+                    path.EndsWith(RESULT_TRANSPARENT_SUFFIX)
+                    )
                 {
                     bitmaps.Add(null);
                 }
@@ -56,23 +60,8 @@ namespace WebSafeColorCheck
             {
                 if (null != bmp)
                 {
-                    Bitmap bitmapRet = new Bitmap(bmp.Width, bmp.Height);
-
-                    for (int y = 0; y < bmp.Height; y++)
-                    {
-                        for (int x = 0; x < bmp.Width; x++)
-                        {
-                            if (IsWebSafeColor(bmp.GetPixel(x, y)))
-                            {
-                                bitmapRet.SetPixel(x, y, yesColor);
-                            }
-                            else
-                            {
-                                bitmapRet.SetPixel(x, y, noColor);
-                            }
-                        }
-                    }
-                    bitmapRet.Save(filePaths[i] + SUFFIX);
+                    WriteYesNoImage(i, bmp);
+                    WriteTransparentImage(i, bmp);
                 }
 
                 i++;
@@ -80,6 +69,42 @@ namespace WebSafeColorCheck
 
             // HTML出力
             WriteHtml();
+        }
+
+        void WriteYesNoImage(int i, Bitmap bmp)
+        {
+            Bitmap bitmapRet = new Bitmap(bmp.Width, bmp.Height);
+
+            for (int y = 0; y < bmp.Height; y++)
+            {
+                for (int x = 0; x < bmp.Width; x++)
+                {
+                    if (IsWebSafeColor(bmp.GetPixel(x, y)))
+                    {
+                        bitmapRet.SetPixel(x, y, yesColor);
+                    }
+                    else
+                    {
+                        bitmapRet.SetPixel(x, y, noColor);
+                    }
+                }
+            }
+            bitmapRet.Save(filePaths[i] + RESULT_YES_NO_SUFFIX);
+        }
+        void WriteTransparentImage(int i, Bitmap bmp)
+        {
+            Bitmap bitmapRet = new Bitmap(bmp.Width, bmp.Height);
+
+            for (int y = 0; y < bmp.Height; y++)
+            {
+                for (int x = 0; x < bmp.Width; x++)
+                {
+                    Color color = bmp.GetPixel(x, y);
+                    int value = color.A;
+                    bitmapRet.SetPixel(x, y, Color.FromArgb(255, value, value, value));
+                }
+            }
+            bitmapRet.Save(filePaths[i] + RESULT_TRANSPARENT_SUFFIX);
         }
 
         /// <summary>
@@ -130,7 +155,7 @@ namespace WebSafeColorCheck
         <br />
         <table class=""table table-bordered"">
             <tr>
-                <td></td><td>元画像</td><td>セーフカラー・チェック</td>
+                <td></td><td>元画像</td><td>セーフカラー・チェック</td><td>透明度チェック</td>
             </tr>
 ");
 
@@ -140,7 +165,7 @@ namespace WebSafeColorCheck
                 if (null != bmp)
                 {
                     sb.Append(@"        <tr>
-            <td>" + filePaths[i] + @"</td><td><img src=""" + filePaths[i] + @""" /></td><td><img src=""" + (filePaths[i] + SUFFIX) + @""" /></td>
+            <td>" + filePaths[i] + @"</td><td><img src=""" + filePaths[i] + @""" /></td><td><img src=""" + (filePaths[i] + RESULT_YES_NO_SUFFIX) + @""" /></td><td><img src=""" + (filePaths[i] + RESULT_TRANSPARENT_SUFFIX) + @""" style=""border:solid 1px Green;"" /></td>
         </tr>
 ");
                 }
